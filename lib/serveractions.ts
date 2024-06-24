@@ -105,15 +105,21 @@ export const createCommentAction = async (
       userId: user.id,
       profilePhoto: user.imageUrl,
     };
-    const post = await Post.findById({ _id: postId });
-    if (!post) throw new Error("Post not found");
-
     const comment = await Comment.create({
       textMessage: inputText,
       user: userDatabase,
     });
+    const new_comment = await comment.save();
 
-    post.comments?.push(comment._id);
+    const post = await Post.findByIdAndUpdate(
+      postId,
+      { $push: { comments: new_comment._id } },
+      { new: true }
+    );
+
+    if (!post) throw new Error("Post not found");
+
+    // post.comments?.push(new_comment._id);
     await post.save();
 
     revalidatePath("/");
